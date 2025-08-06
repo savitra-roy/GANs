@@ -1,66 +1,90 @@
-# Generative-Adversarial-Network-for-CIFAR-10
+# Generative Adversarial Network for CIFAR-10
 
-A deep learning project that generates realistic 32x32 color images from random noise.
+This project demonstrates the implementation of a Generative Adversarial Network (GAN) to generate images similar to those in the CIFAR-10 dataset. The network is built using Keras with a TensorFlow backend.
 
----
+## Project Overview
 
-## Overview
+The goal of this project is to train a generative model that can create realistic-looking 32x32 pixel color images of objects from the 10 classes in the CIFAR-10 dataset. This is achieved by setting up a GAN, which consists of two neural networks—a Generator and a Discriminator—that are trained simultaneously in a competitive process.
 
-- Utilizes a **Convolutional Neural Network (CNN)** based architecture for both the Generator and Discriminator.
-- Based on the principles of Generative Adversarial Networks to produce novel images.
-- Trained on the popular **CIFAR-10 dataset**.
-- The Generator learns to create images that are convincing enough to fool the Discriminator.
+## Dataset
 
----
+The project utilizes the **CIFAR-10 dataset**, which is a widely used benchmark dataset in computer vision. It consists of 60,000 32x32 color images in 10 classes, with 6,000 images per class. The classes include:
 
-## Model Highlights
+-   Airplane
+-   Automobile
+-   Bird
+-   Cat
+-   Deer
+-   Dog
+-   Frog
+-   Horse
+-   Ship
+-   Truck
 
-- **Generator Architecture:** A deep convolutional network that uses `Conv2DTranspose` layers to upsample a 100-dimensional latent noise vector into a 32x32x3 image. Uses `LeakyReLU` and `tanh` activation functions.
-- **Discriminator Architecture:** A standard CNN with `Conv2D` layers designed to classify input images as either "real" (from the dataset) or "fake" (from the generator). It uses `LeakyReLU` activation and a final `sigmoid` output.
-- **Regularization:** `Dropout` is used in the Discriminator to prevent overfitting.
-- **Dataset:** Trained on the **CIFAR-10** dataset, which consists of 60,000 32x32 color images in 10 classes.
-- **Results:**
-  - The model was successfully trained for **100 epochs**.
-  - Generated images show increasing coherence and detail as training progresses.
+The dataset is loaded directly from the `keras.datasets` library.
 
----
+## Methodology
 
-## Key Steps
+The GAN architecture is composed of two main components: a Discriminator and a Generator.
 
-- **Data Loading & Preprocessing:** Loaded the CIFAR-10 dataset and scaled the images to the `[-1, 1]` range to work with the `tanh` activation function of the generator.
-- **Model Building:** Constructed the Generator and Discriminator models from scratch using Keras and TensorFlow.
-- **Adversarial Training:** Created a combined GAN model where the Discriminator's weights are frozen, allowing the Generator to be trained to fool the Discriminator.
-- **Iterative Improvement:** The models were trained in an adversarial loop, where in each step, the Discriminator is trained on real and fake images, and then the Generator is trained to improve its image generation.
+### 1. Discriminator
 
----
+The Discriminator is a convolutional neural network (CNN) designed to distinguish between real images (from the CIFAR-10 dataset) and fake images (created by the Generator). Its architecture is as follows:
 
-## Usage
+-   **Conv2D Layer**: 64 filters, 3x3 kernel, LeakyReLU activation.
+-   **Conv2D Layer**: 128 filters, 3x3 kernel, strides of (2,2), LeakyReLU activation.
+-   **Conv2D Layer**: 128 filters, 3x3 kernel, strides of (2,2), LeakyReLU activation.
+-   **Conv2D Layer**: 256 filters, 3x3 kernel, strides of (2,2), LeakyReLU activation.
+-   **Flatten Layer**: To convert the feature maps into a single vector.
+-   **Dropout Layer**: For regularization.
+-   **Dense Layer**: A single output neuron with a sigmoid activation function to produce a probability score (real or fake).
 
-1.  **Clone the repository and install dependencies:**
+### 2. Generator
+
+The Generator's role is to create synthetic images that are convincing enough to fool the Discriminator. It takes a random noise vector (from a latent space) as input and upsamples it to produce a 32x32x3 image. The architecture includes:
+
+-   **Dense Layer**: To project the latent space vector into a higher-dimensional space.
+-   **Reshape Layer**: To convert the vector into a 4x4 feature map.
+-   **Conv2DTranspose Layers**: A series of upsampling layers with 4x4 kernels and strides of (2,2) to progressively increase the image resolution from 4x4 to 32x32.
+-   **Conv2D Layer**: The final layer with a `tanh` activation function to produce the output image with pixel values in the range [-1, 1].
+
+## Training
+
+The GAN is trained by alternating between training the Discriminator and the Generator:
+
+1.  **Train the Discriminator**:
+    -   A batch of real images from the CIFAR-10 dataset is fed to the Discriminator with a "real" label (1).
+    -   A batch of fake images is generated by the Generator and fed to the Discriminator with a "fake" label (0).
+    -   The Discriminator's weights are updated based on its ability to correctly classify both real and fake images.
+
+2.  **Train the Generator**:
+    -   The Generator's weights are updated by trying to generate images that the Discriminator classifies as "real." During this phase, the Discriminator's weights are frozen.
+
+This process is repeated for 100 epochs, with performance summaries and generated image samples saved every 10 epochs.
+
+## How to Use
+
+1.  **Clone the repository**:
     ```bash
     git clone [https://github.com/savitra-roy/GANs.git](https://github.com/savitra-roy/GANs.git)
-    cd GANs
-    pip install tensorflow keras matplotlib numpy
     ```
-2.  **Open the notebook:** The entire implementation is contained within a Jupyter Notebook.
+2.  **Install the required libraries**:
     ```bash
-    jupyter notebook GANs.ipynb
+    pip install -r requirements.txt
     ```
-3.  **Run the cells:** Execute the cells in the notebook to train the model and generate images.
+3.  **Run the Jupyter Notebook** `GANs.ipynb` to start the training process. The notebook will save the generated images and the trained generator model at regular intervals.
 
----
+## Results
 
-## Findings
+After 100 epochs of training, the model achieved the following performance:
 
-- The adversarial training process is highly sensitive to hyperparameters. The balance between the Generator and Discriminator is crucial for stable training.
-- The quality of the generated images visibly improves with more training epochs, demonstrating the model's ability to learn the underlying data distribution of the CIFAR-10 dataset.
-- Using `LeakyReLU` in the discriminator and `tanh` in the generator's output layer are effective choices for GAN architectures.
+-   **Discriminator Accuracy on Real Images:** ~90%
+-   **Discriminator Accuracy on Fake Images:** ~100%
 
----
+The Generator is capable of producing recognizable, albeit blurry, images of objects. Below is an example of the generated images after 100 epochs.
 
-## Future Directions
+![Generated Images at Epoch 100](https://raw.githubusercontent.com/savitra-roy/GANs/main/generated_plot_e100.png)
 
-- **Implement a more advanced GAN architecture:** Experiment with architectures like Wasserstein GAN (WGAN) or StyleGAN for more stable training and higher-quality image generation.
-- **Train on a higher-resolution dataset:** Adapt the model to work with datasets like CelebA or LSUN to generate more detailed images.
-- **Conditional GAN:** Modify the model to be a conditional GAN (cGAN), allowing it to generate images of specific classes from the CIFAR-10 dataset.
-- **Deploy the model:** Create a web application where users can see newly generated images from the trained generator model.
+## Conclusion
+
+This project successfully demonstrates the implementation of a DCGAN for generating small color images. The quality of the generated images can be further improved by training for more epochs, tuning hyperparameters, or using more advanced GAN architectures.
